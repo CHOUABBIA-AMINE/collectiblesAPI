@@ -31,4 +31,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     @RestResource(rel ="inList", path = "inList")
     Page<User> findByUsernameContaining(@Param("filter") String filter_01, Pageable page);
+    
 }

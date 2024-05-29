@@ -13,8 +13,14 @@
 
 package aures.api.model.security;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -45,7 +51,10 @@ import lombok.ToString;
 @AllArgsConstructor
 @Entity(name="User")
 @Table(name="T_01_01", uniqueConstraints = { @UniqueConstraint(name = "T_01_01_UK_01", columnNames = { "F_01" })})
-public class User {
+public class User implements UserDetails{
+	
+	private static final long serialVersionUID = 1221548L;
+
 	
 	@Id
 	@Column(name="F_00")
@@ -77,4 +86,37 @@ public class User {
 			uniqueConstraints = @UniqueConstraint(name = "R_01_01_01_02_UK_01", columnNames = {"F_01", "F_02"}))
 	private List<Role> roles;
 
+	@Override
+    public boolean isAccountNonExpired() {
+		return this.expirationDate.getTime() - System.currentTimeMillis()>0?true:false;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return this.locked==0?true:false;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		Collection<SimpleGrantedAuthority> authorities = new ArrayList<SimpleGrantedAuthority>();
+		if(this.getRoles() != null)
+		this.getRoles().forEach(role->{
+			//authorities.add(new SimpleGrantedAuthority(role.getName()));
+			role.getAuthorities().forEach(authority->{
+				authorities.add(new SimpleGrantedAuthority(authority.getName()));
+			});
+		});
+		return (Collection<? extends GrantedAuthority>) authorities;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return this.enabled==1?true:false;
+	}
+	
 }
